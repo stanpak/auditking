@@ -52,3 +52,14 @@ Auditor.recordChange(object, objectRepository, userInfo);
 
 All of these operations should be made prior saving updated object in the database using the repository. 
 
+### Getting report on the object changes:
+
+```Java
+Auditor.reportChanges(objectClass, objectId);
+```
+In the result the above method should return all of the changes that were done on an object of given class and with given ID.
+
+To report all changes made by specific user:
+```Java
+Auditor.reportChanges(userId);
+```
