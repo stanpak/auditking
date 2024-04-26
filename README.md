@@ -31,6 +31,14 @@ Small yet powerful audit trail recording library based on Java and MongoDB
 - The audit database can be separate from the business data
 - The retention can be added and managed separately from the business data retention.
 
+## Design
+
+We can identify following concerns:
+- Interfacing with business code (Auditor)
+- Performing the recording task (Recorder - abstracted, as there can be various strategies of recording an auditing entry)
+- Storing the auditing entry (Storage - abstracted)
+- Performing the object difference analysis (DifferenceAnalyzer).
+
 ## Sample Java code
 
 ### Recording the change:
