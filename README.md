@@ -12,13 +12,18 @@ Small yet powerful audit trail recording library based on Java and MongoDB
   - Event logging
   - Error handling
   - Audit trail recording
+- Why the aspect data and code should be kept outside of the business logic:
+  - Its behavior and data structures may **change independently**
+  - We want to keep our business logic and data clean just **clearly separated from other concerns**.
+  - **Better code reuse** (no need to reimplement the functionality in business logic code)
+  - **Better performance** as part of the processing can be delegated asynchronically to specialized aspect services and not affect business logic performance. 
 - Primary purpose of audit trail recording:
   - Recording changes in the important data objects
   - When they happened
   - Nature of the operation
   - Who did the changes
   - What was changed specifically
- 
+
 ## Features
 
 - Asynchronic processing
