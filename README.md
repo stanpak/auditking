@@ -5,7 +5,9 @@ Small yet powerful audit trail recording library based on Java and MongoDB
 
 ### Business logic code + business data are the core concern
 
-  The main concern of the software developers is usually building the business logic that governs the business data. And additionally (and optionally) the interface(s) to interact with that business logic.
+The main concern of the software developers is usually building the business logic that governs the business data. And additionally (and optionally) the interface(s) to interact with that business logic.
+
+![Examples of Aspects and how they transect the Business Domain but still they are still decoupled in terms of code and the data.](./doc/Aspects vs Business Domain.png)
 
 ### Aspects are of supportive role to business logic/data
   
@@ -64,8 +66,8 @@ If the auditing functional domain is carefully separated from the business logic
 
   When the information collected for the audit trail purposes is kept out from the business data - the data structures can be considerably de-cluttered, holding only the relevant information.
 
-- No additional code needed to be added to the business logic.
-- Very simple data extraction from the DB for reporting purposes.
+- **No additional code** needed to be added to the business logic.
+- **Very simple data extraction** from the DB for reporting purposes.
 - Storing whole history of object changes
 - No need to modify the core business data structures
 - The audit database can be separate from the business data
@@ -137,12 +139,46 @@ If there is just one parameter to the method the `subjects` parameter can be omi
 ### Getting report on the object changes
 
 ```Java
-auditor.reportChanges(objectClass, objectId);
+// by object id
+auditor.reportChanges(systemId, objectClass, objectId);
+
+// by object class
+auditor.reportChanges(systemId, objectClass);
 ```
 In the result the above method should return all of the changes that were done on an object of given class and with given ID.
 
 To report all changes made by specific user:
 ```Java
-auditor.reportChanges(userId);
+auditor.reportChanges(systemId, userId);
 ```
+
+## Decision Matrix
+
+So now we can compare this concept of auditing with other techniques that are in commonly in use.
+
+* **Technique I** - Adding timestamp to tables (**Timestamp**)
+
+    One if the common techniques is to add the timestamp and the ID of the updater to each record of the object in the table.
+
+* **Technique II** - Timestamp and a record copy (**Multiple Records**)
+
+    The other method is to create new record in the table upon the change of any o the values. This way we can have the whole history of changes.
+
+| Criterion                           | AuditKing                                                                       | Timestamp                                                                    | Multiple Records                                                                                                       |
+|-------------------------------------|---------------------------------------------------------------------------------|------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
+| **Separation of Audit/BL code**     | **YES**                                                                         | NO - audit information is still in the business DB                           | NO - audit data mixed with business data, specialized code needs to be written to handle this for each table/object    |
+| **Separation of Audit/BL data**     | **YES**                                                                         | NO                                                                           | NO                                                                                                                     |
+| **Impact on writing business code** | **ZERO**                                                                        | SOME - some code needs to be called to write this information to each record | HARD - more complex code needs to be written to write updates as well to retrieve the data.                            |
+| **Audit data retrieval**            | **EASY** - one query                                                            | HARDER - query/object                                                        | HARD - query/object                                                                                                    |
+| **Impact on performance**           | **SMALL** - if async method is used                                             | **TINY** - as the change is attached to the record which is written already. | LARGE - each query needs to use more resources to sieve through many values, additional indices needed for each table. |
+| **Human error factor**              | **TINY** - just add an annotation for the code to work.                         | SMALL - more coding is needed                                                | LARG**FULL**E - complex coding is required                                                                             |
+| **Size of code**                    | **TINY**                                                                        | SOME                                                                         | LOTS                                                                                                                   |
+| **Maintenance effort**              | **SMALL** - BL and Auditing code can change separately unaffected by each other | LOTS - code is coupled                                                       | LOTS - code is coupled                                                                                                 |
+| **History or changes**              | **FULL**                                                                        | LAST CHANGE ONLY                                                             | **FULL**                                                                                                               |
+| **Information on what changed**     | **FULL**                                                                        | NOTHING                                                                      | **FULL**                                                                                                               |
+| **Need for testing**                | **ZERO**                                                                        | SOME                                                                         | LARGE                                                                                                                  |
+| **Sharing audit DB**                | **YES**                                                                         | NO                                                                           | NO                                                                                                                     |
+
+
+
 
