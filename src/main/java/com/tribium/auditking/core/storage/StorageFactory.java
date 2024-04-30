@@ -1,6 +1,7 @@
 package com.tribium.auditking.core.storage;
 
 import com.tribium.auditking.core.AuditConfiguration;
+import com.tribium.auditking.core.Audited;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -8,8 +9,11 @@ import org.springframework.stereotype.Component;
 public class StorageFactory {
     @Autowired AuditConfiguration configuration;
 
+    @Autowired ConsoleStorage consoleStorage;
+
     public Storage getInstance(){
-        // TODO
-        return null;
+        if(configuration.getStorageType()== AuditConfiguration.StorageType.Console)
+            return consoleStorage;
+        throw new RuntimeException("No Storage implementation available for this type.");
     }
 }

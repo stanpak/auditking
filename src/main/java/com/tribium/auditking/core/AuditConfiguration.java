@@ -16,8 +16,22 @@ public class AuditConfiguration {
 
     private RecorderType recorderType = RecorderType.Direct;
 
+    public StorageType getStorageType() {
+        return storageType;
+    }
+
+    public void setStorageType(StorageType storageType) {
+        this.storageType = storageType;
+    }
+
+    private StorageType storageType = StorageType.Console;
+
     public enum  RecorderType{
         Direct, Thread, MQ
+    }
+
+    public enum  StorageType{
+        Console, MongoDB
     }
 
     public boolean isRecordFullObjectDetails() {

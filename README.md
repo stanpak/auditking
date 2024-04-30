@@ -25,6 +25,9 @@ Small yet powerful audit trail recording library based on Java and MongoDB
     - Retry logic
     - Metrics collection
     - Performance monitoring
+    - Data limiting and throttling
+    - Retry mechanism
+    - Data transformation
 
 ### Aspects are separate concerns
 
