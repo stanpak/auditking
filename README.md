@@ -7,7 +7,7 @@ Small yet powerful audit trail recording library based on Java and MongoDB
 
 The main concern of the software developers is usually building the business logic that governs the business data. And additionally (and optionally) the interface(s) to interact with that business logic.
 
-![Examples of Aspects and how they transect the Business Domain but still they are still decoupled in terms of code and the data.](doc/Aspects vs Business Domain.png)
+![Examples of Aspects and how they transect the Business Domain but still they are still decoupled in terms of code and the data.](doc/Aspects-vs-Business-Domain.png)
 
 ### Aspects are of supportive role to business logic/data
   
