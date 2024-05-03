@@ -7,6 +7,8 @@ Small yet powerful audit trail recording library based on Java and MongoDB
 
 The main concern of the software developers is usually building the business logic that governs the business data. And additionally (and optionally) the interface(s) to interact with that business logic.
 
+Below are shown some common examples of such supportive functions (which are called **aspects**) and how they transect the Business Domain but still they are still decoupled in terms of code and the data.
+
 ![Examples of Aspects and how they transect the Business Domain but still they are still decoupled in terms of code and the data.](doc/Aspects-vs-Business-Domain.png)
 
 ### Aspects are of supportive role to business logic/data
@@ -31,9 +33,19 @@ The main concern of the software developers is usually building the business log
     - Retry mechanism
     - Data transformation
 
-### Aspects are separate concerns
+### Aspects ARE separate concerns
 
-  Aspects have not only supportive role to the core business logic but also should be considered as dealing with entirely different concerns on their own, separate from the business logic, not affecting it in considerable way. They are orthogonal to the business logic.
+Aspects have not only supportive role to the core business logic but also should be considered as dealing with entirely different concerns on their own, separate from the business logic, not affecting it in considerable way. They are orthogonal to the business logic.
+
+As the business domain is the core concern, we want to keep it as clean and unobstructure with other concerns as possible.
+This is important as we want to make the code as easy to understand, code, follow, maintain and test.
+Adding more concerns causes the code to be interweaved and thus increasingly complex where it is very hard to discern which lines of code belong to the business domain and which serve just a supportive function.
+
+When such need for separation of concerns is ignored it may lead gradually to the gridlock when the code and the data of the system becomes so complex and hard to maintain that the better decision is to decommission the system entirely and rewrite the code from the scratch, in hope for better results this time.
+
+The other concern of the auditing data can be the retention requirements. The audit trail data may be kept in shorter time period than the code business domain data. 
+
+Performance-wise the auditing processes may be entirely detached from the business domain code so any performance impact of these operations can be minimized and delegated to different processing units. 
 
 ### Audit trail recording is an aspect
 
@@ -48,11 +60,26 @@ This realization should guide the design of the application and proper separatio
 
 ## Primary purpose of audit trail recording
 
-  - Recording changes in the important data objects
-  - When they happened
-  - Nature of the operation
-  - Who did the changes
-  - What was changed specifically
+  - **Recording changes in the important data objects**
+
+    The primary purpose of the audit trail recording is to register any changes to the selected objects that happens in context of the business domain.
+    We want to register that information but we would like to keep that operation as well the resulting data separately from our business domain.
+
+  - **When** the change happened
+
+    The timestamp of that event should be definitely recorded.
+
+  - Nature of the **operation**
+    
+    While the main focus is on the Update, Create or Delete operations, we can optionally register whether the data was even accessed (Read).
+
+  - **Who** did the changes
+
+    It is important to record the system or the user who initiated the change.
+
+  - **What** changed specifically
+
+    It might be important to know what properties of objects changes specifically.
 
 ## Features of Auditing Framework
 
@@ -68,17 +95,36 @@ If the auditing functional domain is carefully separated from the business logic
 
 - **No additional code** needed to be added to the business logic.
 - **Very simple data extraction** from the DB for reporting purposes.
-- Storing whole history of object changes
-- No need to modify the core business data structures
-- The audit database can be separate from the business data
-- The retention can be added and managed separately from the business data retention.
+- Storing **whole history** of object changes
+- **No need to modify the core business data structures**
+- The **audit database can be separate** from the business data
+- The **retention can be added and managed separately** from the business data retention.
 
 ## Design
 
 We can identify following concerns:
 - Interfacing with business code (Auditor)
 - Performing the recording task (Recorder - abstracted, as there can be various strategies of recording an auditing entry)
+
+  There can be multiple strategies of recording the changes:
+
+  - **Direct**
+
+    The operation of recording the change would happen immediately. This option is easiest but it may affect performance slightly.
+
+  - **Asynchronous**
+
+    Each time the change recording is requested it is delegated to the separate detached thread. This is the best solution for any performance sensitive operations.
+
+
 - Storing the auditing entry (Storage - abstracted)
+
+  Different storage options can be available:
+
+  - Console - the changes will be just dumped as a messages in the console. This option is good for testing purposes.
+  - MongoDB - the data can be stored in the separate database for future retrieval and analysis.
+  - MQ - the changes can be sent to specific queue as a message. The recipient system will take care to properly store these changes. This is an ultimate performance saving method that not only causes the change to be recorded and saved in the DB in completely detached fashion from the business domain.
+
 - Performing the object difference analysis (DifferenceAnalyzer).
 
 ## Sample Java code
