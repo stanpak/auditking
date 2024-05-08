@@ -31,9 +31,9 @@ public class AuditAspect {
         System.out.println("user: " + getUserInfo());
 
         // Get the information on the object being subject of the auditing operation.
-        Annotation annotation = joinPoint.getSignature().getDeclaringType().getAnnotation(Audited.class);
+        Annotation annotation = joinPoint.getSignature().getDeclaringType().getAnnotation(AuditedMethod.class);
         if(annotation!=null){
-            Audited a = (Audited) annotation;
+            AuditedMethod a = (AuditedMethod) annotation;
             // TODO
 //            a.subjects()
         }
@@ -62,12 +62,12 @@ public class AuditAspect {
      * This is the way to get the user information directly from the HTTP request.
      * @return
      */
-    private UserInfo getUserInfo() {
+    private Originator getUserInfo() {
         ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes)
                 RequestContextHolder.currentRequestAttributes();
         HttpServletRequest request = (servletRequestAttributes).getRequest();
-        UserInfo userInfo = new UserInfo();
-        userInfo.id = request.getHeader("user");
-        return userInfo;
+        Originator originator = new Originator();
+        originator.id = request.getHeader("user");
+        return originator;
     }
 }

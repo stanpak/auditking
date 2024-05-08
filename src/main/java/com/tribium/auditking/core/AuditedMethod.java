@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Audited {
+public @interface AuditedMethod {
     int[] subjects() default {};
 }
 

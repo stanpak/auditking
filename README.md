@@ -3,6 +3,40 @@ Small yet powerful audit trail recording library based on Java and MongoDB
 
 ## Introduction
 
+## Primary purpose of audit trail recording
+
+The primary purpose of the audit trail recording is to register any changes to the selected objects that happens in context of the business domain.
+
+We want to register that information but we would like to keep that operation as well the resulting data separately from our business domain.
+
+The need for collection of such information may stem from internal needs of keeping detailed log of changes that can be easily followed and analyzed. The other reasons may be of external nature, for example keeping the detailed record of changes of vital data may be the regulatory requirement and a subject of temporary compliance audits.
+
+- Recording changes in the **selected data objects**
+
+- **When** the change happened
+
+  The timestamp of that event should be definitely recorded.
+
+- Nature of the **operation**
+
+  While the main focus is on the Update, Create or Delete operations, we can optionally register whether the data was even accessed (Read).
+
+- **Who** did the changes
+
+  It is important to record the system or the user who initiated the change.
+
+- **What** changed specifically
+
+  It might be important to know what properties of objects changes specifically.
+
+- **Reason** for change
+
+    An additional commentary may be added to the audit entry where the originating party provides explanation for the changes. 
+
+- **The context of the operation**
+
+    It may be useful to see in context of what business function the set of changes to the business object was made.
+
 ### Business logic code + business data are the core concern
 
 The main concern of the software developers is usually building the business logic that governs the business data. And additionally (and optionally) the interface(s) to interact with that business logic.
@@ -58,28 +92,6 @@ This realization should guide the design of the application and proper separatio
   - **Better code reuse** (no need to reimplement the functionality in business logic code)
   - **Better performance** as part of the processing can be delegated asynchronically to specialized aspect services and not affect business logic performance. 
 
-## Primary purpose of audit trail recording
-
-  - **Recording changes in the important data objects**
-
-    The primary purpose of the audit trail recording is to register any changes to the selected objects that happens in context of the business domain.
-    We want to register that information but we would like to keep that operation as well the resulting data separately from our business domain.
-
-  - **When** the change happened
-
-    The timestamp of that event should be definitely recorded.
-
-  - Nature of the **operation**
-    
-    While the main focus is on the Update, Create or Delete operations, we can optionally register whether the data was even accessed (Read).
-
-  - **Who** did the changes
-
-    It is important to record the system or the user who initiated the change.
-
-  - **What** changed specifically
-
-    It might be important to know what properties of objects changes specifically.
 
 ## Features of Auditing Framework
 
@@ -99,6 +111,12 @@ If the auditing functional domain is carefully separated from the business logic
 - **No need to modify the core business data structures**
 - The **audit database can be separate** from the business data
 - The **retention can be added and managed separately** from the business data retention.
+- **Selective object recording** can be done through the configuration.
+
+    That means no code changes are required to include or exclude any objects from the audit trail recording.
+
+- We can store **whole values of objects** before and after the change or just the **difference**.
+
 
 ## Design
 
@@ -127,6 +145,36 @@ We can identify following concerns:
 
 - Performing the object difference analysis (DifferenceAnalyzer).
 
+### What is in the audit entry
+
+The auditing framework collects the information in two structures (stored in separate tables/collections):
+* The context of the business operation.
+* Changes to the exact objects in relation to the above context.
+
+```javascript
+operation: {
+    id,
+    systemId,   // Originating system ID. A textual identifier.
+    method,     // Details of the business method
+    startTime, endTime, // Timestamps of the start and end of the business method
+    reason, // Business reason for the change. 
+}
+
+change: {
+    id,
+    systemId,   // ID of the system that the change object belongs to
+    operationId, // Reference to the operation within which the change was performed. 
+    objectClass,    // Name of the object class - fully qualified Java class name
+    objectId,   // ID of the object instance
+    time, // Timestamp of change
+    originatorId, // user name or system ID of the originator of the change.
+    difference, // map showing the differences to the business object that were made during the business operation.
+    oldValue, newValue, // optional, the previous and new value of the business object being subject of change
+}
+```
+
+
+
 ## Sample Java code
 
 ### Recording the change:
@@ -150,7 +198,7 @@ public class MyService{
     // Do changes to the `obj`
     obj.name = "Business Object";
 
-    auditor.recordObjectChange(obj, userInfo);
+    auditor.recordObjectChange(obj, originator);
 
     repository.save(obj);
   }   
@@ -168,8 +216,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class MyService{
-  @Audited(subjects={"obj"})  
-  public updateBusinessObject(BusinessObject obj){
+  @Audited(objectClasses={BusinessObject.class})  
+  public updateBusinessObject(BusinessObject obj, @AuditedReason String reason){
     // Do changes to the `obj`
     obj.name = "Business Object";
     repository.save(obj);
@@ -180,7 +228,10 @@ public class MyService{
 Now we can see that our business logic is clearly visible and neatly separated from the auditing envelope
 
 The `@Audited` annotation takes an optional parameter which is the list of function parameters that should be subject of audit trail (as there can be more than one). 
-If there is just one parameter to the method the `subjects` parameter can be omitted.
+
+If there is just one parameter to the method the `objectClasses` parameter can be omitted.
+
+The optional parameter can be added that may contain the commentary explaining the business reasons for the change. This comment is specifically intended to be added to the audit entry, therefore it needs to be annotated with `@AuditedReason` annotation to indicate to the auditing mechanism that it is the purpose of that parameter.
 
 ### Getting report on the object changes
 
@@ -225,6 +276,35 @@ So now we can compare this concept of auditing with other techniques that are in
 | **Need for testing**                | **ZERO**                                                                        | SOME                                                                         | LARGE                                                                                                                  |
 | **Sharing audit DB**                | **YES**                                                                         | NO                                                                           | NO                                                                                                                     |
 
+## Remaining concerns
 
+### Handling the failed business methods/outcomes
 
+This mechanism depends on the method of signaling from the business method that the error in the business logic has happened and the update operation has been aborted (rolled back).
+
+### How to pass the `reason` information
+
+#### Method I
+One idea is to annotate one of the attributes of the object being updated with special annotation (for example `@AuditedReason`). This field then will be searched and picked up by the auditing functionality and then included in the audit entry as a reason explanation and yet removed from the data that is stored in the DB at the same time.
+
+This function would require to update the object to remove the `reason` value from the object just prior method execution.
+
+In order to prevent the attribute from being recorded in the business data - it can be annotated with the `@Transient` annotation.
+
+#### Method II (preferred)
+The other idea is to provide separate parameter with the business method that will be the `reason` and which can be annotate with special annotation so our auditing logic knows it should be used and put as a reson comment in the audit entry.
+
+This method is most elegant as we do not need to change our data structures, and just add the additional/optional parameter to our method.
+
+For example:
+
+```Java
+import com.tribium.auditking.core.AuditedMethod;
+
+@AuditedMethod
+public MyObject createMyObject(@AuditedObject MyObject obj, @AuditedReason String reason) {
+    // ...
+}
+
+```
 

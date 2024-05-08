@@ -1,6 +1,7 @@
 package com.tribium.auditking.tryout;
 
-import com.tribium.auditking.core.Audited;
+import com.tribium.auditking.core.AuditedMethod;
+import com.tribium.auditking.core.AuditedReason;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,33 +13,27 @@ public class SampleController {
     @GetMapping("/doNothing")
     public void doNothing(){}
 
+    /**
+     * Method is audited and all the changes to the objects should be surrounded by the context of this method.
+     */
+    @AuditedMethod
     @GetMapping("/audited")
-    public MyObject audited(){
-        MyObject obj = new MyObject();
-        obj.string = "val";
-        obj.integer = 1;
-        return sampleService.auditedMethod(obj);
+    public void audited(@AuditedReason String reason){
+        // Just use another method to do the lifting...
+        notAudited();
     }
 
-    @GetMapping("/direct")
-    @Audited
-    public MyObject direct(){
-        MyObject obj = new MyObject();
-        obj.string = "val";
-        obj.integer = 1;
-        return obj;
+    /**
+     * This method when invoked should not create the audit entry by itself, although when invoked by audited method -
+     * any changes to the data should be recorded within the audit context.
+     */
+    @GetMapping("/notAudited")
+    public void notAudited(){
+        // 1. Create an object
+
+        // 2. Update the object
+
+        // 3. Delete the object
     }
 
-    public static class MyObject{
-        public String string;
-        public Integer integer;
-
-        @Override
-        public String toString() {
-            return "MyObject{" +
-                    "string='" + string + '\'' +
-                    ", integer=" + integer +
-                    '}';
-        }
-    }
 }

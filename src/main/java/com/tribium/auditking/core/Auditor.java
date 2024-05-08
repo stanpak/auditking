@@ -25,7 +25,7 @@ public class Auditor {
 
     public void recordChanges(Object oldObject, Map<String, Object>  oldObjectMap,
                               Object updatedObject, Map<String, Object>  updatedObjectMap,
-                              UserInfo userInfo) {
+                              Originator originator) {
         //  Depending on the mode of operation it can spawn a thread or send a message to the queue or just execute
         //  the code immediately. The method is delegated to the Recorder implementation.
         RecorderTask recorderTask = () -> {
@@ -38,26 +38,26 @@ public class Auditor {
 
             // New record in the database is created with additional timestamp and user information.
             AuditEntry entry = new AuditEntry();
-            entry.differences = diff;
-            entry.user = userInfo;
-            entry.timestamp = new Date();
-
-            // Save the metadata about the object...
-            if (oldObject != null) {
-                entry.objectClass = oldObject.getClass().getName();
-                entry.objectId = getObjectId(oldObject);
-            } else if (updatedObject != null) {
-                entry.objectClass = updatedObject.getClass().getName();
-                entry.objectId = getObjectId(updatedObject);
-            } else throw new RuntimeException("Impossible to get object information.");
-
-            // Store the object values if that was required...
-            if (configuration.isRecordFullObjectDetails()) {
-                if (oldObject != null)
-                    entry.oldObject = oldObjectMap;
-                if (updatedObject != null)
-                    entry.updatedObject = updatedObjectMap;
-            }
+//            entry.differences = diff;
+//            entry.originator = originator;
+//            entry.timestamp = new Date();
+//
+//            // Save the metadata about the object...
+//            if (oldObject != null) {
+//                entry.objectClass = oldObject.getClass().getName();
+//                entry.objectId = getObjectId(oldObject);
+//            } else if (updatedObject != null) {
+//                entry.objectClass = updatedObject.getClass().getName();
+//                entry.objectId = getObjectId(updatedObject);
+//            } else throw new RuntimeException("Impossible to get object information.");
+//
+//            // Store the object values if that was required...
+//            if (configuration.isRecordFullObjectDetails()) {
+//                if (oldObject != null)
+//                    entry.oldObject = oldObjectMap;
+//                if (updatedObject != null)
+//                    entry.updatedObject = updatedObjectMap;
+//            }
 
             // Save the entry into the proper storage location.
             storageFactory.getInstance().save(entry);

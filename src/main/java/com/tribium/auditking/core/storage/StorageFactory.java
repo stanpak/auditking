@@ -1,7 +1,6 @@
 package com.tribium.auditking.core.storage;
 
 import com.tribium.auditking.core.AuditConfiguration;
-import com.tribium.auditking.core.Audited;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
