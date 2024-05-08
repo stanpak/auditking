@@ -4,6 +4,7 @@ import com.tribium.auditking.core.AuditedMethod;
 import com.tribium.auditking.core.AuditedReason;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -18,7 +19,7 @@ public class SampleController {
      */
     @AuditedMethod
     @GetMapping("/audited")
-    public void audited(@AuditedReason String reason){
+    public void audited(@AuditedReason @RequestParam String reason){
         // Just use another method to do the lifting...
         notAudited();
     }

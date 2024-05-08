@@ -177,38 +177,6 @@ change: {
 
 ## Sample Java code
 
-### Recording the change:
-In order to record the change of the object there are following things needed:
- - old object
- - new (modified object)
- - user information
-
-```Java
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-@Service
-public class MyService{
-  @Autowired
-  Auditor auditor;
-
-  public updateBusinessObject(BusinessObject obj){
-    auditor.setObjectForUpdate(obj);
-    
-    // Do changes to the `obj`
-    obj.name = "Business Object";
-
-    auditor.recordObjectChange(obj, originator);
-
-    repository.save(obj);
-  }   
-}
-```
-   
-All of these operations should be made prior saving updated object in the database using the repository. 
-
-In the example above we have the explicit calls to the `Auditor` class instance. This can be perhaps improved by using the annotations, so this way we can simply declare what object is a subject of our auditing aspect and de-clutter our business logic.
-
 Consider following hypothetical rendering:
 
 ```Java
@@ -216,7 +184,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class MyService{
-  @Audited(objectClasses={BusinessObject.class})  
+  @AuditedMethod  
   public updateBusinessObject(BusinessObject obj, @AuditedReason String reason){
     // Do changes to the `obj`
     obj.name = "Business Object";
@@ -227,11 +195,21 @@ public class MyService{
 
 Now we can see that our business logic is clearly visible and neatly separated from the auditing envelope
 
-The `@Audited` annotation takes an optional parameter which is the list of function parameters that should be subject of audit trail (as there can be more than one). 
-
-If there is just one parameter to the method the `objectClasses` parameter can be omitted.
+The `@AuditedMethod` annotation takes an optional parameter which is the list of function parameters that should be subject of audit trail (as there can be more than one). 
 
 The optional parameter can be added that may contain the commentary explaining the business reasons for the change. This comment is specifically intended to be added to the audit entry, therefore it needs to be annotated with `@AuditedReason` annotation to indicate to the auditing mechanism that it is the purpose of that parameter.
+
+The above annotation will cause to create the auditing context when this method is called and within that context any of the updates to the data repositories will be recorded.
+In order to make sure that the data handled by the repository will be recorded withing the auditing context - make sure to add the `@auditedRepository` annotation to the repository interface declaration. For example:
+```Java
+import com.tribium.auditking.core.AuditedRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+@AuditedRepository
+public interface SampleAuditedRepository 
+        extends MongoRepository<SampleAuditedObject,String> {
+}
+```
 
 ### Getting report on the object changes
 

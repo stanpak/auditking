@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class AuditAspect {
     @Autowired Auditor auditor;
 
-    @Around("execution(@com.tribium.auditking.core.Audited * *(..))")
+    @Around("execution(@com.tribium.auditking.core.AuditedMethod * *(..))")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         // TODO Register the initial object values...
         List<Object> arguments = Arrays.stream(joinPoint.getArgs()).collect(Collectors.toList());
